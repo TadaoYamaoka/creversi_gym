@@ -4,13 +4,16 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d12ca316-1a4a-4dcf-916d-7164f85f2224</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>creversi_gym.py</StartupFile>
+    <StartupFile>creversi_gym\gameplay.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>creversi_gym</Name>
     <RootNamespace>creversi_gym</RootNamespace>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>--model H:\src\creversi_gym\creversi_gym\model_100000.pt --games 100</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +24,33 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="creversi_gym.py" />
+    <Folder Include="creversi_gym\" />
+    <Folder Include="creversi_gym\network\" />
+    <Folder Include="creversi_gym\player\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="creversi_gym\dqn.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="creversi_gym\gameplay.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="creversi_gym\network\cnn.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="creversi_gym\ggf_to_training_data.py" />
+    <Compile Include="creversi_gym\player\random_player.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="creversi_gym\player\softmax_player.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="creversi_gym\train_from_training_data.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="setup.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
