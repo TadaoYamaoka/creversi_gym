@@ -2,7 +2,8 @@ import argparse
 
 from creversi import *
 from creversi_gym.player.random_player import RandomPlayer
-from creversi_gym.player.softmax_player import SoftmaxPlayer
+from creversi_gym.player.greedy_player import GreedyPlayer
+#from creversi_gym.player.softmax_player import SoftmaxPlayer
 
 import torch
 
@@ -23,7 +24,8 @@ try:
 except NameError:
     is_jupyter = False
 
-players = [SoftmaxPlayer(args.model, device, args.temperature), RandomPlayer()]
+players = [GreedyPlayer(args.model, device, args.temperature), RandomPlayer()]
+#players = [SoftmaxPlayer(args.model, device, args.temperature), RandomPlayer()]
 
 black_won_count = 0
 white_won_count = 0
@@ -36,21 +38,21 @@ for n in range(args.games):
     i = 0
     while not board.is_game_over():
         i += 1
-        print(f'{i}: ' + ('black' if board.turn == BLACK_TURN else 'white'))
         if board.puttable_num() == 0:
-            board.move_pass()
-            print('pass')
-            continue
+            move = PASS
+        else:
+            player = players[(i - 1) % 2]
+            move = player.go(board)
+            assert board.is_legal(move)
 
-        player = players[(i - 1) % 2]
-        move = player.go(board)
-        assert board.is_legal(move)
         if args.display:
+            print(f'{i}: ' + ('black' if board.turn == BLACK_TURN else 'white'))
             if is_jupyter:
                 display(SVG(board.to_svg(move)))
             else:
                 print(board)
-        print(move_to_str(move))
+            print(move_to_str(move))
+
         board.move(move)
 
     if args.display:

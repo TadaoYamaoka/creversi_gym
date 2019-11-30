@@ -40,7 +40,8 @@ class ReplayMemory(object):
 ######################################################################
 # DQN
 
-from network.cnn import DQN
+#from network.cnn5 import DQN
+from network.cnn10 import DQN
 
 ######################################################################
 # Training

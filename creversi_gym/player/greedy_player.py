@@ -4,7 +4,7 @@ import torch.nn.functional as F
 #from creversi_gym.network.cnn5 import DQN
 from creversi_gym.network.cnn10 import DQN
 
-class SoftmaxPlayer:
+class GreedyPlayer:
     def __init__(self, model_path, device, temperature=0.1):
         self.device = device
         self.temperature = temperature
@@ -23,5 +23,4 @@ class SoftmaxPlayer:
             legal_moves = list(board.legal_moves)
             next_actions = torch.tensor([legal_moves], device=self.device, dtype=torch.long)
             legal_q = q.gather(1, next_actions)
-            probabilities = F.softmax(legal_q / self.temperature, dim=1).detach().cpu().numpy()
-            return np.random.choice(legal_moves, p=probabilities[0])
+            return legal_moves[legal_q.argmax(dim=1).item()]
