@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 k = 128
+fcl_units = 128
 class DQN(nn.Module):
 
     def __init__(self):
@@ -17,8 +18,8 @@ class DQN(nn.Module):
         self.bn4 = nn.BatchNorm2d(k)
         self.conv5 = nn.Conv2d(k, k, kernel_size=3, padding=1)
         self.bn5 = nn.BatchNorm2d(k)
-        self.conv6 = nn.Conv2d(k, 1, kernel_size=1, padding=0)
-        self.bias = nn.Parameter(torch.Tensor(64))
+        self.fcl1 = nn.Linear(k * 64, fcl_units)
+        self.fcl2 = nn.Linear(fcl_units, 65)
 
     def forward(self, x):
         x = F.relu(self.bn1(self.conv1(x)))
@@ -26,6 +27,6 @@ class DQN(nn.Module):
         x = F.relu(self.bn3(self.conv3(x)))
         x = F.relu(self.bn4(self.conv4(x)))
         x = F.relu(self.bn5(self.conv5(x)))
-        x = self.conv6(x).view(-1, 64)
-        x = x + self.bias
+        x = F.relu(self.fcl1(x.view(-1, k * 64)))
+        x = self.fcl2(x)
         return x.tanh()
