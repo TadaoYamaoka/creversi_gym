@@ -103,11 +103,10 @@ def epsilon_greedy(state, legal_moves):
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * episodes_done / EPS_DECAY)
 
-    score = 0
     if sample > eps_threshold:
         with torch.no_grad():
             q = policy_net(state)
-            value, select = q[0, legal_moves].max(0)
+            _, select = q[0, legal_moves].max(0)
     else:
         select = random.randrange(len(legal_moves))
     return select
