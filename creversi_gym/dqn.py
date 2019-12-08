@@ -2,6 +2,7 @@ import gym
 import creversi.gym_reversi
 from creversi import *
 
+import argparse
 import os
 import datetime
 import math
@@ -14,6 +15,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--model', default='model.pt')
+parser.add_argument('--resume')
+parser.add_argument('--batchsize', type=int, default=256)
+parser.add_argument('--num_episodes', type=int, default=160000)
+args = parser.parse_args()
+
 
 env = gym.make('Reversi-v0').unwrapped
 
@@ -52,7 +61,7 @@ class ReplayMemory(object):
 ######################################################################
 # DQN
 
-from network.cnn import DQN
+from network.cnn10 import DQN
 
 def get_state(board):
     features = np.empty((1, 2, 8, 8), dtype=np.float32)
@@ -63,13 +72,13 @@ def get_state(board):
 ######################################################################
 # Training
 
-BATCH_SIZE = 512
-GAMMA = 0.7
+BATCH_SIZE = args.batchsize
+GAMMA = 0.99
 EPS_START = 0.9
 EPS_END = 0.05
-EPS_DECAY = 200
-OPTIMIZE_PER_EPISODES = 2
-TARGET_UPDATE = 10
+EPS_DECAY = 2000
+OPTIMIZE_PER_EPISODES = 16
+TARGET_UPDATE = 4
 
 policy_net = DQN().to(device)
 target_net = DQN().to(device)
@@ -77,12 +86,19 @@ target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
 optimizer = optim.RMSprop(policy_net.parameters(), lr=1e-5)
+
+if args.resume:
+    print('resume {}'.format(args.resume))
+    checkpoint = torch.load(args.resume)
+    target_net.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+
 memory = ReplayMemory(10000)
 
 def epsilon_greedy(state, legal_moves):
     sample = random.random()
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-        math.exp(-1. * steps_done / EPS_DECAY)
+        math.exp(-1. * episodes_done / EPS_DECAY)
 
     score = 0
     if sample > eps_threshold:
@@ -91,29 +107,24 @@ def epsilon_greedy(state, legal_moves):
             value, select = q[0, legal_moves].max(0)
     else:
         select = random.randrange(len(legal_moves))
-    return select, value
+    return select
 
-temperature = 0.6
+temperature = 0.5
 def softmax(state, legal_moves):
     with torch.no_grad():
         q = policy_net(state)
         log_prob = q[0, legal_moves] / temperature
         select = torch.distributions.categorical.Categorical(logits=log_prob).sample()
-        value = q[0, legal_moves[select]]
-    return select, value
+    return select
 
-steps_done = 0
-def select_action(board, state):
-    global steps_done
-
-    steps_done += 1
+def select_action(state, board):
 
     legal_moves = list(board.legal_moves)
 
-    select, value = epsilon_greedy(state, legal_moves)
-    #select, value = softmax(state, board.legal_moves)
+    select = epsilon_greedy(state, legal_moves)
+    #select = softmax(state, board.legal_moves)
 
-    return legal_moves[select], torch.tensor([[legal_moves[select]]], device=device, dtype=torch.long), value, False
+    return legal_moves[select], torch.tensor([[legal_moves[select]]], device=device, dtype=torch.long)
 
 
 ######################################################################
@@ -142,7 +153,7 @@ def optimize_model():
     non_final_next_actions_list = []
     for next_actions in batch.next_actions:
         if next_actions is not None:
-            non_final_next_actions_list.append(next_actions + [next_actions[0]] * (593 - len(next_actions)))
+            non_final_next_actions_list.append(next_actions + [next_actions[0]] * (30 - len(next_actions)))
     non_final_next_actions = torch.tensor(non_final_next_actions_list, device=device, dtype=torch.long)
 
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
@@ -155,18 +166,18 @@ def optimize_model():
     # on the "older" target_net; selecting their best reward with max(1)[0].
     # This is merged based on the mask, such that we'll have either the expected
     # state value or 0 in case the state was final.
-    next_state_values = torch.zeros(BATCH_SIZE, device=device)
+    # 相手番の価値のため反転する
+    next_state_values = -torch.zeros(BATCH_SIZE, device=device)
     # 合法手のみの最大値
     target_q = target_net(non_final_next_states)
     next_state_values[non_final_mask] = target_q.gather(1, non_final_next_actions).max(1)[0].detach()
     # Compute the expected Q values
-    # 相手番の価値のため反転する
-    expected_state_action_values = (-next_state_values * GAMMA) + reward_batch
+    expected_state_action_values = next_state_values * GAMMA + reward_batch
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
-    print(f"loss = {loss.item()}")
+    print(f"{episodes_done}: loss = {loss.item()}")
 
     # Optimize the model
     optimizer.zero_grad()
@@ -179,67 +190,38 @@ def optimize_model():
 ######################################################################
 # main training loop
 
-# 棋譜保存用
-os.makedirs('kifu', exist_ok=True)
-kif = GGF.Exporter()
-
-num_episodes = 1000
-max_moves = 512
+num_episodes = args.num_episodes
+episodes_done = 0
 for i_episode in range(num_episodes):
     # Initialize the environment and state
     env.reset()
-    state = get_state(env)
-    #env.render('sfen')
-    kif.open(os.path.join('kifu', datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.kifu'))
-    kif.header(['dqn', 'dqn'])
+    state = get_state(env.board)
     
     for t in count():
         # Select and perform an action
-        move, action, score, mate = select_action(env.board, state)
-        reward, done, is_draw = env.step(move)
-
-        #詰みの場合
-        if mate:
-            reward = 1.0
-            done = True
-        # 持将棋の場合
-        if t + 1 == max_moves:
-            done = True
+        move, action = select_action(state, env.board)
+        next_board, reward, done, is_draw = env.step(move)
 
         reward = torch.tensor([reward], device=device)
 
         # Observe new state
         if not done:
-            next_state = get_state(env)
-            next_actions = get_legal_labels(env.board)
+            next_state = get_state(next_board)
+            next_actions = list(next_board.legal_moves)
         else:
             next_state = None
             next_actions = None
 
-        # 棋譜出力
-        kif.move(move)
-        kif.info('info score cp ' + str(score))
-        if done:
-            if is_draw == REPETITION_DRAW:
-                kif.end('sennichite')
-            elif is_draw == REPETITION_WIN:
-                kif.end('illegal_win')
-            elif is_draw == REPETITION_LOSE:
-                kif.end('illegal_lose')
-            elif t + 1 == max_moves:
-                kif.end('draw')
-            else:
-                kif.end('resign')
-
         # Store the transition in memory
         memory.push(state, action, next_state, next_actions, reward)
+
+        if done:
+            break
 
         # Move to the next state
         state = next_state
 
-        if done:
-            kif.close()
-            break
+    episodes_done += 1
 
     if i_episode % OPTIMIZE_PER_EPISODES == OPTIMIZE_PER_EPISODES - 1:
         # Perform several episodes of the optimization (on the target network)
@@ -248,6 +230,9 @@ for i_episode in range(num_episodes):
         # Update the target network, copying all weights and biases in DQN
         if i_episode // OPTIMIZE_PER_EPISODES % TARGET_UPDATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
+
+print('save {}'.format(args.model))
+torch.save({'state_dict': target_net.state_dict(), 'optimizer': optimizer.state_dict()}, args.model)
 
 print('Complete')
 env.close()
