@@ -160,7 +160,7 @@ def optimize_model():
     non_final_next_actions_list = []
     for next_actions in batch.next_actions:
         if next_actions is not None:
-            non_final_next_actions_list.append(next_actions + [next_actions[0]] * (593 - len(next_actions)))
+            non_final_next_actions_list.append(next_actions + [next_actions[0]] * (30 - len(next_actions)))
     non_final_next_actions = torch.tensor(non_final_next_actions_list, device=device, dtype=torch.long)
 
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
