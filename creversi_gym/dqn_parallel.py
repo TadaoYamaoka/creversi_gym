@@ -173,13 +173,13 @@ def optimize_model():
     # on the "older" target_net; selecting their best reward with max(1)[0].
     # This is merged based on the mask, such that we'll have either the expected
     # state value or 0 in case the state was final.
-    next_state_values = torch.zeros(BATCH_SIZE, device=device)
+    # 相手番の価値のため反転する
+    next_state_values = -torch.zeros(BATCH_SIZE, device=device)
     # 合法手のみの最大値
     target_q = target_net(non_final_next_states)
     next_state_values[non_final_mask] = target_q.gather(1, non_final_next_actions).max(1)[0].detach()
     # Compute the expected Q values
-    # 相手番の価値のため反転する
-    expected_state_action_values = (-next_state_values * GAMMA) + reward_batch
+    expected_state_action_values = next_state_values * GAMMA + reward_batch
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
