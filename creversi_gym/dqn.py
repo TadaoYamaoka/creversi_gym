@@ -10,6 +10,7 @@ import random
 import numpy as np
 from collections import namedtuple
 from itertools import count
+import logging
 
 import torch
 import torch.nn as nn
@@ -21,8 +22,10 @@ parser.add_argument('--model', default='model.pt')
 parser.add_argument('--resume')
 parser.add_argument('--batchsize', type=int, default=256)
 parser.add_argument('--num_episodes', type=int, default=160000)
+parser.add_argument('--log')
 args = parser.parse_args()
 
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=args.log, level=logging.DEBUG)
 
 env = gym.make('Reversi-v0').unwrapped
 
@@ -177,7 +180,7 @@ def optimize_model():
     # Compute Huber loss
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
-    print(f"{episodes_done}: loss = {loss.item()}")
+    logging.info(f"{episodes_done}: loss = {loss.item()}")
 
     # Optimize the model
     optimizer.zero_grad()
