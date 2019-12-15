@@ -5,9 +5,8 @@ import torch.nn.functional as F
 from creversi_gym.network.cnn10 import DQN
 
 class GreedyPlayer:
-    def __init__(self, model_path, device, temperature=0.1):
+    def __init__(self, model_path, device):
         self.device = device
-        self.temperature = temperature
         self.model = DQN().to(device)
         checkpoint = torch.load(model_path)
         self.model.load_state_dict(checkpoint['state_dict'])

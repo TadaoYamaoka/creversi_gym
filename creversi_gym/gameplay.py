@@ -3,12 +3,13 @@ import argparse
 from creversi import *
 from creversi_gym.player.random_player import RandomPlayer
 from creversi_gym.player.greedy_player import GreedyPlayer
-#from creversi_gym.player.softmax_player import SoftmaxPlayer
+from creversi_gym.player.softmax_player import SoftmaxPlayer
 
 import torch
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', default='model.pt')
+parser.add_argument('--model1', default='model.pt')
+parser.add_argument('--model2')
 parser.add_argument('--temperature', type=float, default=0.1)
 parser.add_argument('--games', type=int, default=1)
 parser.add_argument('--display', action='store_true')
@@ -24,8 +25,10 @@ try:
 except NameError:
     is_jupyter = False
 
-players = [GreedyPlayer(args.model, device, args.temperature), RandomPlayer()]
-#players = [SoftmaxPlayer(args.model, device, args.temperature), RandomPlayer()]
+if not args.model2:
+    players = [GreedyPlayer(args.model1, device), RandomPlayer()]
+else:
+    players = [SoftmaxPlayer(args.model1, device, args.temperature), SoftmaxPlayer(args.model2, device, args.temperature)]
 
 black_won_count = 0
 white_won_count = 0
