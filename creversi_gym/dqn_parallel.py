@@ -18,6 +18,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--ddqn', action='store_true')
 parser.add_argument('--model', default='model.pt')
 parser.add_argument('--resume')
 parser.add_argument('--batchsize', type=int, default=256)
@@ -175,9 +176,15 @@ def optimize_model():
     # state value or 0 in case the state was final.
     next_state_values = torch.zeros(BATCH_SIZE, device=device)
     # 合法手のみの最大値
-    target_q = target_net(non_final_next_states)
-    # 相手番の価値のため反転する
-    next_state_values[non_final_mask] = -target_q.gather(1, non_final_next_actions).max(1)[0].detach()
+    if args.ddqn:
+        max_a = policy_net(non_final_next_states).gather(1, non_final_next_actions).max(1)[1].unsqueeze(1)
+        target_q = target_net(non_final_next_states).gather(1, non_final_next_actions)
+        # 相手番の価値のため反転する
+        next_state_values[non_final_mask] = -target_q.gather(1, max_a).squeeze().detach()
+    else:
+        target_q = target_net(non_final_next_states)
+        # 相手番の価値のため反転する
+        next_state_values[non_final_mask] = -target_q.gather(1, non_final_next_actions).max(1)[0].detach()
     # Compute the expected Q values
     expected_state_action_values = next_state_values * GAMMA + reward_batch
 
