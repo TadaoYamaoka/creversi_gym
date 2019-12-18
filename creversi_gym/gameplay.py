@@ -10,6 +10,8 @@ import torch
 parser = argparse.ArgumentParser()
 parser.add_argument('--model1', default='model.pt')
 parser.add_argument('--model2')
+parser.add_argument('--network1', default='dqn')
+parser.add_argument('--network2', default='dqn')
 parser.add_argument('--temperature', type=float, default=0.1)
 parser.add_argument('--games', type=int, default=1)
 parser.add_argument('--display', action='store_true')
@@ -26,9 +28,9 @@ except NameError:
     is_jupyter = False
 
 if not args.model2:
-    players = [GreedyPlayer(args.model1, device), RandomPlayer()]
+    players = [GreedyPlayer(args.model1, device, args.network1), RandomPlayer()]
 else:
-    players = [SoftmaxPlayer(args.model1, device, args.temperature), SoftmaxPlayer(args.model2, device, args.temperature)]
+    players = [SoftmaxPlayer(args.model1, device, args.temperature, args.network1), SoftmaxPlayer(args.model2, device, args.temperature, args.network2)]
 
 black_won_count = 0
 white_won_count = 0

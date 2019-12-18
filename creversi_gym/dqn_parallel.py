@@ -19,6 +19,7 @@ import torch.nn.functional as F
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ddqn', action='store_true')
+parser.add_argument('--dueling', action='store_true')
 parser.add_argument('--model', default='model.pt')
 parser.add_argument('--resume')
 parser.add_argument('--batchsize', type=int, default=256)
@@ -66,7 +67,10 @@ class ReplayMemory(object):
 ######################################################################
 # DQN
 
-from network.cnn10 import DQN
+if args.dueling:
+    from network.cnn10_dueling import DQN
+else:
+    from network.cnn10 import DQN
 
 def get_states(envs):
     features_vec = np.zeros((BATCH_SIZE, 2, 8, 8), dtype=np.float32)

@@ -1,11 +1,14 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-#from creversi_gym.network.cnn5 import DQN
-from creversi_gym.network.cnn10 import DQN
 
 class SoftmaxPlayer:
-    def __init__(self, model_path, device, temperature=0.1):
+    def __init__(self, model_path, device, temperature=0.1, network='dqn'):
+        if network == 'dueling':
+            from creversi_gym.network.cnn10_dueling import DQN
+        else:
+            #from creversi_gym.network.cnn5 import DQN
+            from creversi_gym.network.cnn10 import DQN
         self.device = device
         self.temperature = temperature
         self.model = DQN().to(device)
