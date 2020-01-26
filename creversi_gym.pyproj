@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d12ca316-1a4a-4dcf-916d-7164f85f2224</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>creversi_gym\dqn_parallel.py</StartupFile>
+    <StartupFile>creversi_gym\dqn_per.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -12,8 +12,7 @@
     <Name>creversi_gym</Name>
     <RootNamespace>creversi_gym</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>
-    </CommandLineArguments>
+    <CommandLineArguments>--num_iterations 100</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -27,18 +26,21 @@
   <ItemGroup>
     <Folder Include="creversi_gym\" />
     <Folder Include="creversi_gym\network\" />
+    <Folder Include="creversi_gym\utils\" />
     <Folder Include="creversi_gym\player\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="creversi_gym\dqn.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="creversi_gym\dqn_per.py" />
     <Compile Include="creversi_gym\dqn_parallel.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="creversi_gym\gameplay.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="creversi_gym\network\cnn10_dueling.py" />
     <Compile Include="creversi_gym\network\cnn10.py" />
     <Compile Include="creversi_gym\network\cnn5.py">
       <SubType>Code</SubType>
@@ -52,6 +54,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="creversi_gym\train_from_training_data.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="creversi_gym\utils\data_structures.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="setup.py">
