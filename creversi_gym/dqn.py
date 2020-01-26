@@ -96,7 +96,7 @@ if args.resume:
     target_net.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
 
-memory = ReplayMemory(10000)
+memory = ReplayMemory(131072)
 
 def epsilon_greedy(state, legal_moves):
     sample = random.random()
