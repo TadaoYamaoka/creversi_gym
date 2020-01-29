@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d12ca316-1a4a-4dcf-916d-7164f85f2224</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>creversi_gym\dqn_per.py</StartupFile>
+    <StartupFile>creversi_gym\gameplay.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -12,7 +12,7 @@
     <Name>creversi_gym</Name>
     <RootNamespace>creversi_gym</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>--num_iterations 100</CommandLineArguments>
+    <CommandLineArguments>human random --display</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -46,6 +46,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="creversi_gym\ggf_to_training_data.py" />
+    <Compile Include="creversi_gym\player\human_player.py" />
     <Compile Include="creversi_gym\player\random_player.py">
       <SubType>Code</SubType>
     </Compile>

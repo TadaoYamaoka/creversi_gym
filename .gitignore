@@ -261,3 +261,5 @@ __pycache__/
 *.pyc
 /creversi_gym.egg-info
 *.pt
+log*.txt
+result*.txt
