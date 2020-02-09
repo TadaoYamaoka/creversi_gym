@@ -6,15 +6,16 @@ from creversi_gym.player.human_player import HumanPlayer, RESIGN, QUIT
 
 import torch
 
-def main(player1, player2, model1='model.pt', model2=None, network1='dqn', network2='dqn', temperature=0.1, games=1, display=True):
+def main(player1, player2, model1='model.pt', model2=None, network1='dqn', network2='dqn', temperature=0.1, games=1, is_display=True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    try:
-        is_jupyter = get_ipython().__class__.__name__ != 'TerminalInteractiveShell'
-        if is_jupyter:
-            from IPython.display import SVG, display
-    except NameError:
-        is_jupyter = False
+    if is_display:
+        try:
+            is_jupyter = get_ipython().__class__.__name__ != 'TerminalInteractiveShell'
+            if is_jupyter:
+                from IPython.display import SVG, display
+        except NameError:
+            is_jupyter = False
 
     players = []
     for player, model, network in zip([player1, player2], [model1, model2], [network1, network2]):
@@ -42,7 +43,7 @@ def main(player1, player2, model1='model.pt', model2=None, network1='dqn', netwo
         while not board.is_game_over():
             i += 1
 
-            if display:
+            if is_display:
                 print(f'{i}: ' + ('black' if board.turn == BLACK_TURN else 'white'))
                 if is_jupyter:
                     display(SVG(board.to_svg(move)))
@@ -61,7 +62,7 @@ def main(player1, player2, model1='model.pt', model2=None, network1='dqn', netwo
                         return
                 assert board.is_legal(move)
 
-            if display:
+            if is_display:
                 print(move_to_str(move))
 
             board.move(move)
@@ -75,7 +76,7 @@ def main(player1, player2, model1='model.pt', model2=None, network1='dqn', netwo
                 black_won_count += 1
             continue
 
-        if display:
+        if is_display:
             if is_jupyter:
                 display(SVG(board.to_svg(move)))
             else:
@@ -110,8 +111,8 @@ if __name__ == '__main__':
     parser.add_argument('--network2', default='dqn')
     parser.add_argument('--temperature', type=float, default=0.1)
     parser.add_argument('--games', type=int, default=1)
-    parser.add_argument('--display', action='store_true')
+    parser.add_argument('--is_display', action='store_true')
 
     args = parser.parse_args()
 
-    main(args.player1, args.player2, args.model1, args.model2, args.network1, args.network2, args.temperature, args.games, args.display)
+    main(args.player1, args.player2, args.model1, args.model2, args.network1, args.network2, args.temperature, args.games, args.is_display)
